@@ -1,21 +1,11 @@
 package queue
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 
-	"instashorts-be/is-worker/internal/ai"
-	"instashorts-be/is-worker/internal/ai/gemini"
-	"instashorts-be/is-worker/internal/storage"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hibiken/asynq"
-	"gorm.io/gorm"
 )
 
 // Task types
@@ -235,6 +225,11 @@ func (c *Client) EnqueueVideoComplete(payload VideoCompletePayload) error {
 }
 
 // Task handlers
+// Note: Task handlers moved to is-worker service to avoid internal package imports
+
+/* 
+// Task handlers should be implemented in the is-worker service
+// to have access to internal AI and storage packages
 
 // NewHandleGenerateVideoScript creates a handler for video script generation
 func NewHandleGenerateVideoScript(db *gorm.DB) func(context.Context, *asynq.Task) error {
@@ -1231,3 +1226,5 @@ func updateVideoStatusToFailed(ctx context.Context, db *gorm.DB, videoID int) {
 		Where("id = ?", videoID).
 		Update("status", "failed")
 }
+
+*/

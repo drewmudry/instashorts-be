@@ -1,189 +1,189 @@
 # Instashorts Backend Monorepo
 
-A monorepo containing all backend services for Instashorts using Go Workspaces.
+AI-powered video generation platform backend with Go API, Worker, and TypeScript renderer.
 
-## Structure
+## 🏗️ Architecture
 
-```
-instashorts-be/
-├── pkg/              # Shared Go packages (database, queue)
-├── is-api/           # API service (Go)
-├── is-worker/        # Worker service (Go)
-├── is-render/        # Video renderer service (TypeScript/Remotion)
-└── docker-compose.yml # Unified docker compose for all services
-```
+- **is-api**: REST API service (Go/Gin)
+- **is-worker**: Background job processor (Go/Asynq)
+- **is-render**: Video renderer (TypeScript/Remotion) - *In Development*
+- **pkg**: Shared Go packages (database, queue, etc.)
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Go 1.24+
-- Node.js 20+
+- Go 1.23+
 - Docker & Docker Compose
-- Make
+- PostgreSQL (via Docker)
+- Redis (via Docker)
+- Google Cloud Project with Vertex AI enabled
+- AWS S3 bucket for storage
+- ElevenLabs API key for text-to-speech
 
-### Setup
+### Setup Instructions
 
-1. Clone and navigate to the repo:
+1. **Clone and navigate to the project**:
+   ```bash
+   cd instashorts-backend
+   ```
+
+2. **Fix Go versions** (Go 1.24 doesn't exist yet, use 1.23):
+   ```bash
+   chmod +x fix-monorepo.sh
+   ./fix-monorepo.sh
+   ```
+
+3. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your actual credentials
+   ```
+
+4. **Add Google Cloud credentials**:
+   ```bash
+   # Copy your Vertex AI service account key
+   cp /path/to/your/vertex-ai-key.json ./vertex-ai-key.json
+   ```
+
+5. **Build and run with Docker**:
+   ```bash
+   # Build all services
+   docker-compose build
+
+   # Start all services
+   docker-compose up -d
+
+   # View logs
+   docker-compose logs -f
+   ```
+
+6. **Run database migrations**:
+   ```bash
+   # Wait for postgres to be ready, then:
+   make migrate-up
+   ```
+
+## 📝 Development
+
+### Local Development (without Docker)
+
 ```bash
-cd instashorts-be
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 make install
-```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-4. Start all services with Docker Compose:
-```bash
-make up
-# or with build
-make up-build
-```
-
-5. Run database migrations:
-```bash
-make migrate-up
-```
-
-## Services
-
-### API (`is-api`)
-- REST API for video management
-- Authentication (Google/Discord OAuth)
-- Runs on port 8000
-
-### Worker (`is-worker`)
-- Background job processor
-- Handles video generation tasks
-- Health check on port 5100
-
-### Renderer (`is-render`)
-- TypeScript service using Remotion
-- Renders videos from queue tasks
-- Uploads to S3
-
-### Infrastructure
-- PostgreSQL database
-- Redis queue
-
-## Development
-
-### Running Services Locally
-
-```bash
-# API
+# Run API locally
 make dev-api
 
-# Worker
+# Run Worker locally
 make dev-worker
 
-# Renderer
-make dev-renderer
-```
-
-### Building
-
-```bash
-# Build all
-make build
-
-# Build specific service
-make build-api
-make build-worker
-make build-renderer
-```
-
-### Testing
-
-```bash
-# Run all tests
+# Run tests
 make test
-
-# Run specific service tests
-make test-api
-make test-worker
 ```
 
-## Docker Compose
+### Working with the Monorepo
 
-### Start all services
-```bash
-make up
-```
-
-### View logs
-```bash
-make logs           # All services
-make logs-api       # API only
-make logs-worker    # Worker only
-make logs-renderer  # Renderer only
-```
-
-### Stop services
-```bash
-make down
-```
-
-## Go Workspace
-
-This monorepo uses Go Workspaces (`go.work`) to manage multiple Go modules:
-
-- `pkg/` - Shared packages
-- `is-api/` - API service
-- `is-worker/` - Worker service
-
-To sync the workspace:
-```bash
-make work-sync
-```
-
-## Database Migrations
-
-Migrations are stored in `is-api/migrations/`.
+The project uses Go workspaces for managing multiple modules:
 
 ```bash
-make migrate-up      # Run migrations
-make migrate-down    # Rollback last migration
+# Sync workspace dependencies
+go work sync
+
+# Add a new module to workspace
+go work use ./new-module
 ```
 
-## Environment Variables
+### Database Migrations
 
-Required environment variables (see `.env.example`):
+```bash
+# Create new migration
+migrate create -ext sql -dir is-api/migrations -seq migration_name
 
-- Database: `BLUEPRINT_DB_*`
-- Redis: `REDIS_HOST`, `REDIS_PORT`
-- OAuth: `GOOGLE_*`, `DISCORD_*`
-- AWS: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET_NAME`
-- AI APIs: `GOOGLE_API_KEY`, `ELEVENLABS_API_KEY`
+# Run migrations
+make migrate-up
 
-## Architecture
+# Rollback last migration
+make migrate-down
+```
 
-### Shared Code (`pkg/`)
-- `database/` - Database connection and service
-- `queue/` - Redis queue client and task definitions
+## 🔧 Configuration
 
-### Service-Specific Code
-- `is-api/internal/` - API-specific handlers, routes, auth
-- `is-worker/internal/` - Worker-specific AI services, storage
+### Required Environment Variables
 
-### Task Flow
-1. API enqueues tasks → Redis
-2. Worker processes generation tasks
-3. Renderer processes render tasks
-4. Worker handles completion tasks
+- **Database**: `BLUEPRINT_DB_*` variables for PostgreSQL
+- **Redis**: `REDIS_HOST`, `REDIS_PORT`
+- **OAuth**: Google and Discord OAuth credentials
+- **Google Cloud**: `GCP_PROJECT_ID`, service account key
+- **AWS**: S3 credentials and bucket name
+- **ElevenLabs**: API key for text-to-speech
 
-## Make Targets
+See `.env.example` for all variables.
 
-Run `make help` to see all available targets.
+## 📁 Project Structure
 
-## License
+```
+.
+├── go.work                 # Go workspace configuration
+├── pkg/                    # Shared packages
+│   ├── database/          # Database connection
+│   └── queue/            # Queue client and tasks
+├── is-api/                # API service
+│   ├── cmd/api/          # API entry point
+│   ├── internal/         # API business logic
+│   └── migrations/       # Database migrations
+├── is-worker/             # Worker service
+│   ├── cmd/worker/       # Worker entry point
+│   └── internal/         # Worker business logic
+└── is-render/             # Renderer service (TypeScript)
+```
 
-ISC
+## 🐛 Troubleshooting
 
+### Import Issues
+
+If you see import errors:
+1. Ensure all modules use the same prefix: `instashorts-be/`
+2. Run `go work sync`
+3. Check that `replace` directives point to `../pkg`
+
+### Docker Build Issues
+
+If Docker builds fail:
+1. Ensure go.work is present in the build context
+2. Check that Go version is 1.23 (not 1.24)
+3. Verify all source directories are copied in Dockerfile
+
+### Database Connection Issues
+
+1. Check PostgreSQL is running: `docker-compose ps postgres`
+2. Verify credentials in .env match docker-compose.yml
+3. Ensure migrations have run successfully
+
+## 🚦 API Endpoints
+
+- `GET /health` - Health check
+- `GET /api/auth/google` - Start Google OAuth
+- `POST /api/videos` - Create new video
+- `GET /api/videos/:id` - Get video details
+- `GET /api/videos/:id/status` - Get video processing status
+
+## 📊 Video Processing Pipeline
+
+1. **Script Generation** - Generate video script using Gemini
+2. **Audio Generation** - Convert script to speech with ElevenLabs
+3. **Caption Generation** - Extract word-level timestamps
+4. **Scene Generation** - Generate scene descriptions with Gemini
+5. **Image Generation** - Create images with Imagen 4.0
+6. **Video Rendering** - Combine assets with Remotion Lambda
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Run tests: `make test`
+4. Submit a pull request
+
+## 📄 License
+
+[Your License Here]

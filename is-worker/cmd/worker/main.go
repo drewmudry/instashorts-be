@@ -13,6 +13,7 @@ import (
 
 	"instashorts-be/pkg/database"
 	"instashorts-be/pkg/queue"
+	"instashorts-be/is-worker/internal/handlers"
 )
 
 func main() {
@@ -47,14 +48,14 @@ func main() {
 	mux := asynq.NewServeMux()
 
 	// Register task handlers
-	mux.HandleFunc(queue.TypeGenerateVideoScript, queue.NewHandleGenerateVideoScript(gormDB))
-	mux.HandleFunc(queue.TypeGenerateAudio, queue.NewHandleGenerateAudio(gormDB))
-	mux.HandleFunc(queue.TypeGenerateCaptions, queue.NewHandleGenerateCaptions(gormDB))
-	mux.HandleFunc(queue.TypeGenerateScenes, queue.NewHandleGenerateScenes(gormDB))
-	mux.HandleFunc(queue.TypeGenerateSceneImage, queue.NewHandleGenerateSceneImage(gormDB))
+	mux.HandleFunc(queue.TypeGenerateVideoScript, handlers.NewHandleGenerateVideoScript(gormDB))
+	mux.HandleFunc(queue.TypeGenerateAudio, handlers.NewHandleGenerateAudio(gormDB))
+	mux.HandleFunc(queue.TypeGenerateCaptions, handlers.NewHandleGenerateCaptions(gormDB))
+	mux.HandleFunc(queue.TypeGenerateScenes, handlers.NewHandleGenerateScenes(gormDB))
+	mux.HandleFunc(queue.TypeGenerateSceneImage, handlers.NewHandleGenerateSceneImage(gormDB))
 	// Note: TypeRenderVideo is now handled by the TypeScript renderer service
-	// mux.HandleFunc(queue.TypeRenderVideo, queue.NewHandleRenderVideo(gormDB))
-	mux.HandleFunc(queue.TypeVideoComplete, queue.NewHandleVideoComplete(gormDB))
+	// mux.HandleFunc(queue.TypeRenderVideo, handlers.NewHandleRenderVideo(gormDB))
+	mux.HandleFunc(queue.TypeVideoComplete, handlers.NewHandleVideoComplete(gormDB))
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)

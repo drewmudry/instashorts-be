@@ -10,15 +10,15 @@ import {
   staticFile,
 } from 'remotion';
 
-interface VideoCompositionProps {
+export interface VideoCompositionProps {
   scenes: Array<{
-    imageUrl: string;
+    image_url: string;
     index: number;
   }>;
   captions: Array<{
     word: string;
-    startTime: number;
-    endTime: number;
+    start_time: number;
+    end_time: number;
   }>;
   audioUrl: string;
 }
@@ -42,7 +42,7 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
 
   // Find current caption words
   const currentCaptions = captions.filter(
-    (caption) => currentTime >= caption.startTime && currentTime <= caption.endTime
+    (caption) => currentTime >= caption.start_time && currentTime <= caption.end_time
   );
 
   // Calculate scene transition
@@ -60,7 +60,7 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
         }}
       >
         <Img
-          src={currentScene.imageUrl}
+          src={currentScene.image_url}
           style={{
             width: '100%',
             height: '100%',
@@ -101,7 +101,7 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
                   marginRight: '8px',
                   opacity: interpolate(
                     currentTime,
-                    [caption.startTime, caption.startTime + 0.1, caption.endTime - 0.1, caption.endTime],
+                    [caption.start_time, caption.start_time + 0.1, caption.end_time - 0.1, caption.end_time],
                     [0, 1, 1, 0],
                     {
                       extrapolateLeft: 'clamp',

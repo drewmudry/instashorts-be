@@ -27,7 +27,7 @@ export async function renderVideo(params: RenderVideoParams): Promise<string> {
   // Calculate video duration from captions
   let videoDuration = 0;
   if (captions.length > 0) {
-    videoDuration = captions[captions.length - 1].endTime;
+    videoDuration = captions[captions.length - 1].end_time;
   } else {
     // Fallback: 5 seconds per scene
     videoDuration = scenes.length * 5;

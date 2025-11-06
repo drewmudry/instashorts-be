@@ -39,7 +39,7 @@ export function getDatabasePool(): pg.Pool {
       database: process.env.BLUEPRINT_DB_DATABASE || '',
       user: process.env.BLUEPRINT_DB_USERNAME || '',
       password: process.env.BLUEPRINT_DB_PASSWORD || '',
-      schema: process.env.BLUEPRINT_DB_SCHEMA || 'public',
+      // Note: schema is set via search_path in query execution
     });
   }
   return pool;
