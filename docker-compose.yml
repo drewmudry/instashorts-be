@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${BLUEPRINT_DB_USERNAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${BLUEPRINT_DB_USERNAME} -d ${BLUEPRINT_DB_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,14 +86,10 @@ services:
       # AI/Service API Keys
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_REGION: ${AWS_REGION}
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      AWS_S3_BUCKET: ${S3_BUCKET_NAME}
       # Google Cloud Configuration
       GCP_PROJECT_ID: ${GCP_PROJECT_ID}
       GCP_LOCATION: ${GCP_LOCATION:-us-central1}
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME}
       GOOGLE_APPLICATION_CREDENTIALS: /app/gcp-key.json
       # Remotion Lambda
       REMOTION_LAMBDA_FUNCTION: ${REMOTION_LAMBDA_FUNCTION}

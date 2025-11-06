@@ -214,7 +214,7 @@ func NewHandleGenerateAudio(db *gorm.DB) func(context.Context, *asynq.Task) erro
 		log.Printf("Audio generated for video_id=%d (size: %d bytes)", payload.VideoID, len(audioData))
 
 		// Create S3 service
-		s3Service, err := storage.NewS3Service(ctx)
+		s3Service, err := storage.NewGCSClient(ctx)
 		if err != nil {
 			log.Printf("ERROR: Failed to create S3 service for video_id=%d: %v", payload.VideoID, err)
 			// Update status to "failed" if we can't create the S3 service
@@ -310,20 +310,72 @@ func NewHandleGenerateCaptions(db *gorm.DB) func(context.Context, *asynq.Task) e
 	}
 }
 
-func NewHandleGenerateScenes(db *gorm.DB) func(context.Context, *asynq.Task) error {
-	return func(ctx context.Context, t *asynq.Task) error {
-		// TODO: Implement scene generation  
-		log.Println("Scene generation handler - not yet implemented")
-		return nil
+// EnqueueGenerateCaptions enqueues a caption generation task
+func (c *Client) EnqueueGenerateCaptions(payload GenerateCaptionsPayload) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
+
+	task := asynq.NewTask(TypeGenerateCaptions, jsonPayload)
+	info, err := c.client.Enqueue(task)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue task: %w", err)
+	}
+
+	log.Printf("Enqueued task: id=%s queue=%s", info.ID, info.Queue)
+	return nil
 }
 
-func NewHandleGenerateSceneImage(db *gorm.DB) func(context.Context, *asynq.Task) error {
-	return func(ctx context.Context, t *asynq.Task) error {
-		// TODO: Implement scene image generation
-		log.Println("Scene image generation handler - not yet implemented")
-		return nil
+// EnqueueGenerateScenes enqueues a scene generation task
+func (c *Client) EnqueueGenerateScenes(payload GenerateScenesPayload) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
+
+	task := asynq.NewTask(TypeGenerateScenes, jsonPayload)
+	info, err := c.client.Enqueue(task)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue task: %w", err)
+	}
+
+	log.Printf("Enqueued task: id=%s queue=%s", info.ID, info.Queue)
+	return nil
+}
+
+// EnqueueGenerateSceneImage enqueues a scene image generation task
+func (c *Client) EnqueueGenerateSceneImage(payload GenerateSceneImagePayload) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	task := asynq.NewTask(TypeGenerateSceneImage, jsonPayload)
+	info, err := c.client.Enqueue(task)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue task: %w", err)
+	}
+
+	log.Printf("Enqueued task: id=%s queue=%s", info.ID, info.Queue)
+	return nil
+}
+
+// EnqueueRenderVideo enqueues a video rendering task
+func (c *Client) EnqueueRenderVideo(payload RenderVideoPayload) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	task := asynq.NewTask(TypeRenderVideo, jsonPayload)
+	info, err := c.client.Enqueue(task)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue task: %w", err)
+	}
+
+	log.Printf("Enqueued task: id=%s queue=%s", info.ID, info.Queue)
+	return nil
 }
 
 func NewHandleVideoComplete(db *gorm.DB) func(context.Context, *asynq.Task) error {
