@@ -7,14 +7,15 @@ WORKDIR /app
 COPY go.work go.work
 COPY pkg/go.mod pkg/go.sum* ./pkg/
 COPY is-api/go.mod is-api/go.sum* ./is-api/
+COPY is-worker/go.mod is-worker/go.sum* ./is-worker/
 
-# Download dependencies
-RUN cd pkg && go mod download
-RUN cd is-api && go mod download
+# Download all dependencies for the workspace
+RUN go mod download
 
-# Copy source code
+# Copy all source code
 COPY pkg/ ./pkg/
 COPY is-api/ ./is-api/
+COPY is-worker/ ./is-worker/
 
 # Build the API
 WORKDIR /app/is-api
@@ -28,8 +29,6 @@ RUN apk --no-cache add ca-certificates curl
 WORKDIR /app
 
 COPY --from=builder /app/bin/api .
-
 EXPOSE 8000
 
 CMD ["./api"]
-
