@@ -1,5 +1,8 @@
 # Monorepo Makefile for Instashorts Backend
 
+include .env
+export
+
 .PHONY: help build build-api build-worker build-renderer up down restart logs clean test
 
 help: ## Show this help message
