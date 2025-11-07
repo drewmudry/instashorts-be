@@ -120,17 +120,22 @@ func NewHandleGenerateVideoScript(db *gorm.DB) func(context.Context, *asynq.Task
 			err := queueClient.EnqueueGenerateAudio(queue.GenerateAudioPayload(payload))
 			if err != nil {
 				log.Printf("Failed to enqueue generate audio task: %v", err)
-				// Don't return error as script generation was successful
 			}
+
+			log.Printf("Enqueueing generate scenes task for video_id=%d", payload.VideoID)
+			err = queueClient.EnqueueGenerateScenes(queue.GenerateScenesPayload(payload))
+			if err != nil {
+				log.Printf("Failed to enqueue generate scenes task: %v", err)
+			}
+
 		} else {
-			log.Printf("Warning: Queue client not initialized, skipping audio generation")
+			log.Printf("Warning: Queue client not initialized, skipping audio and scene generation")
 		}
 
 		return nil
 	}
 }
 
-// NewHandleGenerateAudio creates a handler for audio generation
 func NewHandleGenerateAudio(db *gorm.DB) func(context.Context, *asynq.Task) error {
 	return func(ctx context.Context, t *asynq.Task) error {
 		var payload queue.GenerateAudioPayload
@@ -283,16 +288,8 @@ func NewHandleGenerateAudio(db *gorm.DB) func(context.Context, *asynq.Task) erro
 			err := queueClient.EnqueueGenerateCaptions(queue.GenerateCaptionsPayload(payload))
 			if err != nil {
 				log.Printf("Failed to enqueue generate captions task: %v", err)
-				// Don't return error as audio generation was successful
 			}
 
-			// Enqueue scene generation
-			log.Printf("Enqueueing generate scenes task for video_id=%d", payload.VideoID)
-			err = queueClient.EnqueueGenerateScenes(queue.GenerateScenesPayload(payload))
-			if err != nil {
-				log.Printf("Failed to enqueue generate scenes task: %v", err)
-				// Don't return error as audio generation was successful
-			}
 		} else {
 			log.Printf("Warning: Queue client not initialized, skipping caption and scene generation")
 		}
@@ -354,6 +351,7 @@ func NewHandleGenerateCaptions(db *gorm.DB) func(context.Context, *asynq.Task) e
 			log.Printf("ERROR: Failed to convert captions to JSON for video_id=%d: %v", payload.VideoID, err)
 			return fmt.Errorf("failed to convert captions to JSON: %w", err)
 		}
+		log.Printf("Captions JSON: %s", captionsJSON)
 
 		// Update captions in the database
 		if err := db.WithContext(ctx).
@@ -667,10 +665,11 @@ func NewHandleGenerateSceneImage(db *gorm.DB) func(context.Context, *asynq.Task)
 
 // checkAndEnqueueRender checks if all prerequisites are met to render the video
 func checkAndEnqueueRender(ctx context.Context, db *gorm.DB, videoID int) {
-	// Fetch video with captions
+	// --- MODIFICATION: Fetch video with captions AND status ---
 	var video struct {
 		ID       int
 		Captions *string
+		Status   string // <-- Added this field
 	}
 	if err := db.WithContext(ctx).
 		Table("videos").
@@ -685,6 +684,16 @@ func checkAndEnqueueRender(ctx context.Context, db *gorm.DB, videoID int) {
 		log.Printf("Captions not ready yet for video_id=%d, skipping render", videoID)
 		return
 	}
+
+	// --- MODIFICATION: Added check to prevent race condition ---
+	// If captions are done, but the scenes task hasn't finished (i.e., status isn't 'generating_images' or 'ready_to_render'),
+	// then it's too early for us to check for pending scenes.
+	// The scene_image handlers will call this check again later.
+	if video.Status != "generating_images" && video.Status != "ready_to_render" {
+		log.Printf("Captions are done, but scene generation is not yet complete (status: %s). Skipping render check.", video.Status)
+		return
+	}
+	// --- END MODIFICATION ---
 
 	// Check if all scenes have completed
 	var pendingScenes int64
@@ -712,11 +721,27 @@ func checkAndEnqueueRender(ctx context.Context, db *gorm.DB, videoID int) {
 	}
 
 	if totalScenes == 0 {
+		// This check is now safe, as we know the scene gen step has run
 		log.Printf("No scenes found for video_id=%d, skipping render", videoID)
 		return
 	}
 
-	log.Printf("All prerequisites met for video_id=%d, enqueueing render task", videoID)
+	// --- MODIFICATION: Update status to 'ready_to_render' BEFORE enqueueing ---
+	log.Printf("All prerequisites met for video_id=%d, updating status and enqueueing render task", videoID)
+
+	// Update status to "ready_to_render"
+	if err := db.WithContext(ctx).
+		Model(&struct {
+			ID     int
+			Status string
+		}{}).
+		Table("videos").
+		Where("id = ?", videoID).
+		Update("status", "ready_to_render").Error; err != nil {
+		log.Printf("ERROR: Failed to update video status to ready_to_render: %v", err)
+		// Don't return, still try to enqueue
+	}
+	// --- END MODIFICATION ---
 
 	// Enqueue render video task
 	queueClient := queue.GetClient()

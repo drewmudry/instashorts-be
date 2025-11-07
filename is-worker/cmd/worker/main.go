@@ -55,7 +55,6 @@ func main() {
 	mux.HandleFunc(queue.TypeGenerateScenes, handlers.NewHandleGenerateScenes(gormDB))
 	mux.HandleFunc(queue.TypeGenerateSceneImage, handlers.NewHandleGenerateSceneImage(gormDB))
 	// Note: TypeRenderVideo is now handled by the TypeScript renderer service
-	// mux.HandleFunc(queue.TypeRenderVideo, handlers.NewHandleRenderVideo(gormDB))
 	mux.HandleFunc(queue.TypeVideoComplete, handlers.NewHandleVideoComplete(gormDB))
 
 	// Set up signal handling for graceful shutdown

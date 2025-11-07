@@ -47,7 +47,7 @@ func (s *Service) GenerateVideoScript(ctx context.Context, theme string) (string
 	prompt := fmt.Sprintf(`Generate a compelling and engaging video script about: %s
 
 Requirements:
-- The script should be between 250-300 words (approximately 70 seconds when narrated)
+- The script should be between 50-100 words (approximately 10 seconds when narrated)
 - Write in a conversational and engaging tone suitable for short-form video content
 - The script should be in paragraph format with no headers or subheaders
 - Make it informative yet entertaining
@@ -84,15 +84,15 @@ type ScenePrompt struct {
 	Index       int    `json:"index"`
 }
 
-// GenerateScenes generates 10-15 scene prompts based on the video script
+// GenerateScenes generates 2-3 scene prompts based on the video script
 func (s *Service) GenerateScenes(ctx context.Context, script string) ([]ScenePrompt, error) {
-	prompt := fmt.Sprintf(`Based on the following video script, generate 10-15 scene descriptions that will be used to create images for the video.
+	prompt := fmt.Sprintf(`Based on the following video script, generate 2-3 scene descriptions that will be used to create images for the video.
 
 Script:
 %s
 
 Requirements:
-- Generate between 10-15 scenes that flow with the narration. 
+- Generate between 2-3 scenes that flow with the narration. 
 - the script should be in paragraph format with no headers or subheaders.
 - Each scene should be a detailed, descriptive image prompt that can be used for image generation. include consistent style and coloring across all scenes
 - Use consistent styling and coloring across all scenes (e.g., "cinematic style", "vibrant colors", "minimalist illustration")

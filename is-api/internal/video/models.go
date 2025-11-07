@@ -39,21 +39,22 @@ type Caption struct {
 
 // Video represents a video in the system
 type Video struct {
-	ID        int            `json:"id" gorm:"primaryKey"`
-	UserID    int            `json:"user_id" gorm:"not null;index"`
-	SeriesID  *int           `json:"series_id,omitempty" gorm:"index"`
-	Title     *string        `json:"title,omitempty"`
-	Theme     string         `json:"theme" gorm:"not null"`
-	VoiceID   string         `json:"voice_id" gorm:"not null"`
-	Script    *string        `json:"script,omitempty" gorm:"type:text"`
-	AudioURL  *string        `json:"audio_url,omitempty" gorm:"type:text"`
-	VideoURL  *string        `json:"video_url,omitempty" gorm:"type:text"` // Final rendered video URL
-	Captions  *string        `json:"captions,omitempty" gorm:"type:jsonb"` // JSON array of Caption objects
-	Status    VideoStatus    `json:"status" gorm:"type:varchar(50);not null;default:'pending';index"`
-	Scenes    []VideoScene   `json:"scenes,omitempty" gorm:"foreignKey:VideoID"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	ID          int            `json:"id" gorm:"primaryKey"`
+	UserID      int            `json:"user_id" gorm:"not null;index"`
+	SeriesID    *int           `json:"series_id,omitempty" gorm:"index"`
+	Title       *string        `json:"title,omitempty"`
+	Theme       string         `json:"theme" gorm:"not null"`
+	VoiceID     string         `json:"voice_id" gorm:"not null"`
+	Script      *string        `json:"script,omitempty" gorm:"type:text"`
+	AudioURL    *string        `json:"audio_url,omitempty" gorm:"type:text"`
+	VideoURL    *string        `json:"video_url,omitempty" gorm:"type:text"` // Final rendered video URL
+	Captions    *string        `json:"captions,omitempty" gorm:"type:jsonb"` // JSON array of Caption objects
+	Status      VideoStatus    `json:"status" gorm:"type:varchar(50);not null;default:'pending';index"`
+	Scenes      []VideoScene   `json:"scenes,omitempty" gorm:"foreignKey:VideoID"`
+	CreatedAt   time.Time      `json:"created_at"`
+	CompletedAt time.Time      `json:"completed_at,omitempty"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // VideoScene represents a scene in a video with its image
